@@ -348,14 +348,12 @@ public class MenuController : MonoBehaviour
         {
             foreach (KeyValuePair<WaveInfo.UnitInfo, int> keyPair in wavesInfo[id].dictionaryUnits)
             {
-                if (keyPair.Value > 0)
-                    PlayerPrefs.SetInt("wave" + id + keyPair.Key.unitType.ToString() + keyPair.Key.unitPrefab.name + "Count", keyPair.Value);
+                PlayerPrefs.SetInt("wave" + id + keyPair.Key.unitType.ToString() + keyPair.Key.unitPrefab.name + "Count", keyPair.Value);
             }
 
             foreach (KeyValuePair<WaveInfo.UnitInfo, int> keyPair in wavesInfo[id].dictionaryBosses)
             {
-                if (keyPair.Value > 0)
-                    PlayerPrefs.SetInt("wave" + id + keyPair.Key.unitType.ToString() + keyPair.Key.unitPrefab.name + "Count", keyPair.Value);
+                PlayerPrefs.SetInt("wave" + id + keyPair.Key.unitType.ToString() + keyPair.Key.unitPrefab.name + "Count", keyPair.Value);
             }
         }
     }
