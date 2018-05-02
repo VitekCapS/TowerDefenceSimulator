@@ -224,7 +224,7 @@ MonoBehaviour:
   bid: 55
   damage: 3
   range: 4.5
-  projectileSpeed: 5
+  projectileSpeed: 7
   fireRate: 2.5
   projectilePrefab: {fileID: 1893369384742230, guid: fdcc872afd1061f48bd9687c4e13c269,
     type: 2}

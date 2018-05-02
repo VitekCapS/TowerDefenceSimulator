@@ -171,25 +171,6 @@ public class TowerController : MonoBehaviour
         switch (clickState)
         {
             case ClickState.Default:
-                //if (Input.GetMouseButtonDown(0))
-                //{
-
-                //}
-                //if (Input.touchCount == 1)
-                //{
-                //    if (Input.GetTouch(0).phase == TouchPhase.Began)
-                //    {
-                //        RaycastHit hitInfo;
-                //        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.GetTouch(0).position), out hitInfo))
-                //        {
-                //            if (hitInfo.collider.CompareTag("Tower"))
-                //            {
-                //                SelectTower(hitInfo.collider.transform.parent.GetComponent<BasicTower>());
-                //            }
-                //        }
-
-                //    }
-                //}
                 break;
             case ClickState.PlacingTower:
                 tapPosition = Input.mousePosition;
@@ -198,6 +179,8 @@ public class TowerController : MonoBehaviour
                 Physics.Raycast(Camera.main.ScreenPointToRay(tapPosition), out hit);
 
                 placingTower.transform.position = hit.point;
+
+                CheckPlace(hit);
 
                 break;
             case ClickState.TowerSelect:

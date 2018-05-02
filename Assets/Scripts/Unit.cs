@@ -9,7 +9,7 @@ public class Unit : MonoBehaviour
     [SerializeField, Range(0, 1), Tooltip("Процент снижения урона при попадании")]
     protected float defence = 0.01f;
     [SerializeField]
-    protected int health = 1;
+    protected int healthMax = 1;
     [SerializeField]
     protected int reward = 1;
     [SerializeField]
@@ -17,6 +17,8 @@ public class Unit : MonoBehaviour
     [SerializeField]
     protected float speed = 0.1f;
     protected float speedMultiplier = 1;
+
+    protected int health;
 
     public enum UnitType
     {
@@ -27,12 +29,20 @@ public class Unit : MonoBehaviour
     public UnitType unitType = UnitType.Ground;
     public bool isBoss = false;
 
-    public delegate void UnitDamageEventHandler(int x);
+    public delegate void UnitValueHasChanged(params int[] args);
     public delegate void UnitDieEventHandler(Unit unit);
 
-    public static event UnitDamageEventHandler OnDamageTaken;
+    /// <summary>
+    /// Сколько урона получено юнитом
+    /// </summary>
+    public static event UnitValueHasChanged OnDamageTaken;
     public static event UnitDieEventHandler OnDieEvent;
     public static event Action OnDisableEvent;
+
+    /// <summary>
+    /// Событие изменения значения здоровья (передаем текущее и максимальное кол-во)
+    /// </summary>
+    public event UnitValueHasChanged OnHealthValueChanged;
 
     private List<Effect> effects = new List<Effect>(); //бафы, дебафы и прочее
 
@@ -54,6 +64,8 @@ public class Unit : MonoBehaviour
                 health = 0;
                 Die();
             }
+            if (OnHealthValueChanged != null)
+                OnHealthValueChanged.Invoke(value >= 0 ? value : 0, healthMax);
         }
     }
 
@@ -84,7 +96,7 @@ public class Unit : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-
+        health = healthMax;
     }
 
     // Update is called once per frame
@@ -101,6 +113,14 @@ public class Unit : MonoBehaviour
         if (OnDamageTaken != null)
             OnDamageTaken.Invoke(damageTaken);
 
+    }
+
+    public virtual void TrueDamage(float damage)
+    {
+        Health -= (int) damage;
+
+        if (OnDamageTaken != null)
+            OnDamageTaken.Invoke((int) damage);
     }
 
     public virtual void ApplyEffects()
@@ -124,7 +144,7 @@ public class Unit : MonoBehaviour
 
         if (effect.isStackable)
         {
-            if (effect.maxStacksCount < effects.Count(x => x.effectType == checkingType))
+            if (effect.maxStacksCount > effects.Count(x => x.effectType == checkingType))
             {
                 goto Adding; //перепрыгиваем к добавлению
             }
@@ -133,14 +153,23 @@ public class Unit : MonoBehaviour
                 return;
             }
         }
-        
+
         Effect similarTypeEffect = effects.Find(x => x.effectType == checkingType);
         if (similarTypeEffect)
         {
             if (similarTypeEffect.strength > effect.strength)
+            {
                 return;
+            }
             else if (!effect.isRepeatable)
+            {
                 effects.Remove(similarTypeEffect);
+            }
+            else
+            {
+                similarTypeEffect.Duration = effect.Duration;
+                return;
+            }
         }
 
         Adding: //добавление эффекта в список и упорядочивание по приоритету

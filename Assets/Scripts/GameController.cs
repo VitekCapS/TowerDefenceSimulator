@@ -13,6 +13,41 @@ public class GameController : MonoBehaviour
         get { return m_Instance; }
     }
 
+    public int startCoins = 250;
+    public int startLifes = 10;
+    public int wavesCount = 1;
+    public float delayBetweenSpawnUnits = 0.6f;
+    public float delayBetweenWaves = 5.0f;
+    public bool dontLoadPrefs = false;
+    public List<WaveInfo> wavesInfo;
+
+    [Space(10), Header("TOWER PREFABS"), Space(2)]
+    public List<GameObject> towerPrefabs;
+    [Header("tower graphics object for placing")]
+    public List<GameObject> towerTemps;
+    [Space(3), Header("UNIT PREFABS"), Space(2)]
+    public List<GameObject> unitsPrefabs;
+    public List<GameObject> bossesPrefabs;
+    [Header("LEVELS")]
+    public int currentLevel;
+    public List<GameObject> levelPrefabs;
+    [Space(10)]
+    public int currentWaveNum = 1;
+
+    private int countUnits;
+    private int currentCoins;
+    private int currentLifes;
+    private List<Wave> wavesList = new List<Wave>();
+    private bool isGameOver = false;
+    private Spawner spawner;
+
+    public delegate void GameValueChangedEventHandler(int x);
+    public static event GameValueChangedEventHandler
+        OnCountUnitsChanged, OnCoinsValueChanged, OnLifesValueChanged, OnAddCoins, OnSpentCoins, OnLifeLost, OnStartWave, OnFinishWave;
+    public static event Action OnGameOver;
+
+    #region Properties
+
     public int CurrentCoins
     {
         get
@@ -58,39 +93,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public int startCoins = 250;
-    public int startLifes = 10;
-    public int wavesCount = 1;
-    public float delayBetweenSpawnUnits = 0.6f;
-    public float delayBetweenWaves = 5.0f;
-    public bool dontLoadPrefs = false;
-    public List<WaveInfo> wavesInfo;
-
-    [Space(10), Header("TOWER PREFABS"), Space(2)]
-    public List<GameObject> towerPrefabs;
-    [Header("tower graphics object for placing")]
-    public List<GameObject> towerTemps;
-    [Space(3), Header("UNIT PREFABS"), Space(2)]
-    public List<GameObject> unitsPrefabs;
-    public List<GameObject> bossesPrefabs;
-
-    [Header("LEVELS")]
-    public int currentLevel;
-    public List<GameObject> levelPrefabs;
-    [Space(10)]
-    private int currentCoins;
-    private int currentLifes;
-    public int currentWaveNum = 1;
-    private int countUnits;
-
-    private List<Wave> wavesList = new List<Wave>();
-    private bool isGameOver = false;
-    private Spawner spawner;
-
-    public delegate void GameValueChangedEventHandler(int x);
-    public static event GameValueChangedEventHandler 
-        OnCountUnitsChanged, OnCoinsValueChanged, OnLifesValueChanged, OnAddCoins, OnSpentCoins, OnLifeLost, OnStartWave, OnFinishWave;
-    public static event Action OnGameOver;
+    #endregion
 
     [System.Serializable]
     public struct Wave
@@ -109,7 +112,7 @@ public class GameController : MonoBehaviour
     {
         BotAI.OnFinishEvent -= DecreaseLifes;
         Unit.OnDieEvent -= GetRewardForKill;
-        Unit.OnDisableEvent += DecreaseUnitsCount;
+        Unit.OnDisableEvent -= DecreaseUnitsCount;
     }
 
     void Awake()
@@ -347,7 +350,9 @@ public class GameController : MonoBehaviour
         {
             for (int i = 0; i < keyPair.Value; i++)
             {
-                wave.units.Add(Instantiate(keyPair.Key.unitPrefab));
+                GameObject newUnit = Instantiate(keyPair.Key.unitPrefab);
+                newUnit.SetActive(false);
+                wave.units.Add(newUnit);
             }
         }
 
@@ -355,7 +360,9 @@ public class GameController : MonoBehaviour
         {
             for (int i = 0; i < keyPair.Value; i++)
             {
-                wave.units.Add(Instantiate(keyPair.Key.unitPrefab));
+                GameObject newUnit = Instantiate(keyPair.Key.unitPrefab);
+                newUnit.SetActive(false);
+                wave.units.Add(newUnit);
             }
         }
 

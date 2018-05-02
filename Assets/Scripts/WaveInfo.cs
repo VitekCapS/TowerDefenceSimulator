@@ -29,7 +29,6 @@ public class WaveInfo
         {
             unitType = type;
             unitPrefab = prefab;
-            unitPrefab.SetActive(false);
         }
     }
 }

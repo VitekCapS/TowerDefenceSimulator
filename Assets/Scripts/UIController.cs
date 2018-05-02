@@ -54,37 +54,12 @@ public class UIController : MonoBehaviour {
             value = val;
         }
     }
-    #region Были полями статистики
-    public Text towersDamageDealtTotal;
-    public Text lifesLostTotal;
-    public Text killsCountTotal;
-    public Text groundUnitsKilledTotal;
-    public Text airUnitsKilledTotal;
-    public Text bossesKilledTotal;
-    public Text towersBuiltTotal;
-    public Text towersSoldTotal;
-    public Text earnedCoinsTotal;
-    public Text coinsSpentTotal;
-    [Space(2)]
-    public Text towersDamageDealt;
-    public Text lifesLost;
-    public Text killsCount;
-    public Text groundUnitsKilled;
-    public Text airUnitsKilled;
-    public Text bossesKilled;
-    public Text towersBuilt;
-    public Text towersSold;
-    public Text moneyFromSoldTowers;
-    public Text moneySpendForTowers;
-    public Text earnedCoins;
-    public Text coinsSpent;
-    #endregion
 
     private void OnEnable()
     {
         GameController.OnCoinsValueChanged += UpdateUICoins;
         GameController.OnFinishWave += UpdateUIWaves;
-        GameController.OnLifeLost += UpdateUILifes;
+        GameController.OnLifesValueChanged += UpdateUILifes;
         GameController.OnGameOver += ShowWinLoseWindow;
         GameController.OnCountUnitsChanged += UpdateUIUnitCount;
     }
@@ -93,7 +68,7 @@ public class UIController : MonoBehaviour {
     {
         GameController.OnCoinsValueChanged -= UpdateUICoins;
         GameController.OnFinishWave -= UpdateUIWaves;
-        GameController.OnLifeLost -= UpdateUILifes;
+        GameController.OnLifesValueChanged -= UpdateUILifes;
         GameController.OnGameOver -= ShowWinLoseWindow;
         GameController.OnCountUnitsChanged -= UpdateUIUnitCount;
     }
@@ -106,7 +81,7 @@ public class UIController : MonoBehaviour {
 
     private void Start()
     {
-        UpdateUI();
+        UpdateTowersUI();
     }
 
     public void EnableSellTower(BasicTower tower)
@@ -124,7 +99,7 @@ public class UIController : MonoBehaviour {
     {
         foreach (Text field in moneyCountTextFields)
         {
-           field.text = GameController.Instance.CurrentCoins.ToString();
+           field.text = value.ToString();
         }
     }
 
@@ -135,7 +110,7 @@ public class UIController : MonoBehaviour {
 
     public void UpdateUILifes(int value)
     {
-        currentLifesText.text = GameController.Instance.CurrentLifes.ToString();
+        currentLifesText.text = value.ToString();
     }
 
     public void UpdateUIUnitCount(int value)
@@ -143,7 +118,7 @@ public class UIController : MonoBehaviour {
         unitsCountText.text = value.ToString();
     }
 
-    public void UpdateUI()
+    public void UpdateTowersUI()
     {
         for (int i = 0; i < priceTowerTextFields.Count; i++)
         {
@@ -151,39 +126,10 @@ public class UIController : MonoBehaviour {
             priceTowerTextFields[i].text = tower.price.ToString();
             buyTowerImages[i].sprite = tower.image;
         }
-        
     }
-
-    //public void UpdateUIStatistics()
-    //{
-    //    towersDamageDealtTotal.text = Statistics.towersDamageDealtTotal.ToString();
-    //    lifesLostTotal.text = Statistics.lifesLostTotal.ToString();
-    //    killsCountTotal.text = Statistics.killsCountTotal.ToString();
-    //    groundUnitsKilledTotal.text = Statistics.groundUnitsKilledTotal.ToString();
-    //    airUnitsKilledTotal.text = Statistics.airUnitsKilledTotal.ToString();
-    //    bossesKilledTotal.text = Statistics.bossesKilledTotal.ToString();
-    //    towersBuiltTotal.text = Statistics.towersBuiltTotal.ToString();
-    //    towersSoldTotal.text = Statistics.towersSoldTotal.ToString();
-    //    earnedCoinsTotal.text = Statistics.earnedCoinsTotal.ToString();
-    //    coinsSpentTotal.text = Statistics.coinsSpentTotal.ToString();
-
-    //    towersDamageDealt.text = Statistics.Instance.towersDamageDealt.ToString();
-    //    lifesLost.text = Statistics.Instance.lifesLost.ToString();
-    //    killsCount.text = Statistics.Instance.killsCount.ToString();
-    //    groundUnitsKilled.text = Statistics.Instance.groundUnitsKilled.ToString();
-    //    airUnitsKilled.text = Statistics.Instance.airUnitsKilled.ToString();
-    //    bossesKilled.text = Statistics.Instance.bossesKilled.ToString();
-    //    towersBuilt.text = Statistics.Instance.towersBuilt.ToString();
-    //    towersSold.text = Statistics.Instance.towersSold.ToString();
-    //    moneyFromSoldTowers.text = Statistics.Instance.moneyFromSoldTowers.ToString();
-    //    moneySpendForTowers.text = Statistics.Instance.moneySpendForTowers.ToString();
-    //    earnedCoins.text = Statistics.Instance.earnedCoins.ToString();
-    //    coinsSpent.text = Statistics.Instance.coinsSpent.ToString();
-    //}
 
     public void ShowStatisticsWindow()
     {
-        //UpdateUIStatistics();
         UpdateStatisticsWindow();
         statisticsWindow.SetActive(true);
     }

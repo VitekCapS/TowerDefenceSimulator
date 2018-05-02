@@ -67,8 +67,9 @@ public class Statistics : MonoBehaviour
 
     }
 
-    private void TowersDamageDealt(int x)
+    private void TowersDamageDealt(params int[] args)
     {
+        int x = args[0];
         towersDamageDealt += x;
         towersDamageDealtTotal += x;
     }

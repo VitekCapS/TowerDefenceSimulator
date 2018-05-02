@@ -51,16 +51,7 @@ public class MenuController : MonoBehaviour
     private List<Unit> m_unitsPrefabsInfo = new List<Unit>();
     private List<Unit> m_bossesPrefabsInfo = new List<Unit>();
 
-    //public List<WaveSettings> wavesSettings = new List<WaveSettings>();
-    //public struct WaveSettings
-    //{
-    //    public int groundUnitIndex;
-    //    public int groundUnitsCount;
-    //    public int airUnitIndex;
-    //    public int airUnitCount;
-    //    public int bossIndex;
-    //    public int bossCount;
-    //}
+    #region Properties
 
     public int WavesCount
     {
@@ -137,6 +128,8 @@ public class MenuController : MonoBehaviour
             UpdateWaveSettingsUI(currentWaveId);
         }
     }
+
+    #endregion
 
     private void Awake()
     {

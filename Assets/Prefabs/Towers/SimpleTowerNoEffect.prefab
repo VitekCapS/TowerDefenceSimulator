@@ -235,9 +235,9 @@ MonoBehaviour:
   typeAim: 2
   price: 25
   bid: 20
-  damage: 1
+  damage: 3
   range: 4.5
-  projectileSpeed: 2.5
+  projectileSpeed: 4
   fireRate: 2
   projectilePrefab: {fileID: 1633435264839458, guid: 2241e55cf2b95a94fa7330d935c4bc1a,
     type: 2}

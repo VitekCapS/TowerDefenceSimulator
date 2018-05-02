@@ -43,7 +43,7 @@ public class Effect : ScriptableObject
     [SerializeField]
     protected float interval;
 
-    private bool isAlreadyApplied = false;
+    private bool isReadyToCast = false;
     private bool isEnded = false;
     private float castTime = 0;
 
@@ -78,9 +78,14 @@ public class Effect : ScriptableObject
 
             if (castTime > interval)
             {
-                isAlreadyApplied = false;
+                isReadyToCast = true;
                 castTime -= interval;
             }
+        }
+
+        if (isSpeedEffect)
+        {
+            isReadyToCast = true;
         }
 
         duration -= Time.deltaTime;
@@ -94,18 +99,17 @@ public class Effect : ScriptableObject
 
     public virtual void ApplyEffect(Unit bot)
     {
-        if (isAlreadyApplied && !isRepeatable && !isSpeedEffect)
+        if (!isReadyToCast)
             return;
-        else
-            isAlreadyApplied = true;
 
         switch (effectType)
         {
             case EffectType.Poison:
-                bot.Damage(value);
+                bot.TrueDamage(value);
+                isReadyToCast = false;
                 break;
             case EffectType.Slow:
-                bot.SpeedMultiplier -= 1 - (value / 100);
+                bot.SpeedMultiplier -= value / 100;
                 break;
             case EffectType.Stun:
                 bot.SpeedMultiplier = 0;

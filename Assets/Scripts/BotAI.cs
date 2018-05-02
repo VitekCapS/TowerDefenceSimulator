@@ -79,19 +79,18 @@ public class BotAI : MonoBehaviour
     public void MoveToWaypoint(Waypoint waypoint)
     {
         Vector3 dir = waypoint.transform.position - bot.transform.position;             //направление передвижения в точку
-        float _sqrSpeed = (Time.deltaTime * bot.Speed) * (Time.deltaTime * bot.Speed);  //скорость передвижения в квадрате
+        float sqrSpeed = (Time.deltaTime * bot.Speed) * (Time.deltaTime * bot.Speed);  //скорость передвижения в квадрате
 
         //Перемещаем бота в нужном направлении если на этом шаге он не "перескочит" точку
-        if (dir.sqrMagnitude >= _sqrSpeed)
+        if (dir.sqrMagnitude >= sqrSpeed)
         {
             Vector3 newPos = Vector3.MoveTowards(transform.position, currentWaypoint.transform.position, bot.Speed * Time.deltaTime);
             bot.transform.position = newPos;
-            //bot.transform.Translate(dir.normalized * bot.Speed * m_partOfStep);
             m_partOfStep = 1;
         }
         else
         {
-            m_partOfStep = dir.sqrMagnitude / _sqrSpeed;
+            m_partOfStep = dir.sqrMagnitude / sqrSpeed;
 
             if (!waypoint.isFinish)
             {

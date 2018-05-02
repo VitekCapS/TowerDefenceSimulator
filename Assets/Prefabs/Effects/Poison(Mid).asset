@@ -13,10 +13,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectType: 0
   isRepeatable: 1
+  isSpeedEffect: 0
   isStackable: 0
   maxStacksCount: 0
   priority: 0
   strength: 1
-  duration: 4
+  duration: 10
   value: 2
   interval: 1
