@@ -7,11 +7,20 @@ using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
-    private static GameController m_Instance;
+    #region Singleton
+    private static GameController _instance;
     public static GameController Instance
     {
-        get { return m_Instance; }
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindObjectOfType<GameController>() ?? new GameController();
+            }
+            return _instance;
+        }
     }
+    #endregion
 
     public int startCoins = 250;
     public int startLifes = 10;
@@ -34,14 +43,15 @@ public class GameController : MonoBehaviour
     [Space(10)]
     public int currentWaveNum = 1;
 
-    private int countUnits;
-    private int currentCoins;
-    private int currentLifes;
-    private List<Wave> wavesList = new List<Wave>();
-    private bool isGameOver = false;
-    private Spawner spawner;
+    private int _countUnits;
+    private int _currentCoins;
+    private int _currentLifes;
+    private List<Wave> _wavesList = new List<Wave>();
+    private bool _isGameOver = false;
+    private Spawner _spawner;
 
     public delegate void GameValueChangedEventHandler(int x);
+
     public static event GameValueChangedEventHandler
         OnCountUnitsChanged, OnCoinsValueChanged, OnLifesValueChanged, OnAddCoins, OnSpentCoins, OnLifeLost, OnStartWave, OnFinishWave;
     public static event Action OnGameOver;
@@ -52,12 +62,12 @@ public class GameController : MonoBehaviour
     {
         get
         {
-            return currentCoins;
+            return _currentCoins;
         }
 
         set
         {
-            currentCoins = value;
+            _currentCoins = value;
             if (OnCoinsValueChanged != null)
                 OnCoinsValueChanged.Invoke(value);
         }
@@ -67,12 +77,12 @@ public class GameController : MonoBehaviour
     {
         get
         {
-            return currentLifes;
+            return _currentLifes;
         }
 
         set
         {
-            currentLifes = value;
+            _currentLifes = value;
             if (OnLifesValueChanged != null)
                 OnLifesValueChanged.Invoke(value);
         }
@@ -82,12 +92,12 @@ public class GameController : MonoBehaviour
     {
         get
         {
-            return countUnits;
+            return _countUnits;
         }
 
         set
         {
-            countUnits = value;
+            _countUnits = value;
             if (OnCountUnitsChanged != null)
                 OnCountUnitsChanged.Invoke(value);
         }
@@ -101,41 +111,6 @@ public class GameController : MonoBehaviour
         public List<GameObject> units;
     }
 
-    private void OnEnable()
-    {
-        BotAI.OnFinishEvent += DecreaseLifes;
-        Unit.OnDieEvent += GetRewardForKill;
-        Unit.OnDisableEvent += DecreaseUnitsCount;
-    }
-
-    private void OnDisable()
-    {
-        BotAI.OnFinishEvent -= DecreaseLifes;
-        Unit.OnDieEvent -= GetRewardForKill;
-        Unit.OnDisableEvent -= DecreaseUnitsCount;
-    }
-
-    void Awake()
-    {
-        m_Instance = this;
-        currentLevel = PlayerPrefs.GetInt("Level", 0);
-        Instantiate(levelPrefabs[currentLevel]);
-    }
-
-    // Use this for initialization
-    void Start()
-    {
-        if (!dontLoadPrefs)
-        {
-            LoadPrefs();
-        }
-        else
-        {
-            InitWithoutLoadPrefs();
-        }
-
-        InitializeGame();
-    }
 
     public void AddMoney(int amount)
     {
@@ -177,10 +152,10 @@ public class GameController : MonoBehaviour
     //---------------------GAME OVER -------------------------\\
     public void GameOver()
     {
-        if (isGameOver)
+        if (_isGameOver)
             return;
 
-        isGameOver = true;
+        _isGameOver = true;
 
         if (OnGameOver != null)
             OnGameOver.Invoke();
@@ -211,6 +186,7 @@ public class GameController : MonoBehaviour
     {
         SceneManager.LoadScene("Menu");
     }
+
 
     /// <summary>
     /// Получить награду за убийство юнита
@@ -302,8 +278,8 @@ public class GameController : MonoBehaviour
     /// </summary>
     private void InitializeGame()
     {
-        spawner = FindObjectOfType<Spawner>();
-        if (spawner == null)
+        _spawner = FindObjectOfType<Spawner>();
+        if (_spawner == null)
         {
             Debug.Log("На локации отстутствует спаунер, игра не может быть начата!");
             return;
@@ -367,7 +343,7 @@ public class GameController : MonoBehaviour
         }
 
         Adding:
-        wavesList.Add(wave);
+        _wavesList.Add(wave);
 
     }
 
@@ -375,7 +351,7 @@ public class GameController : MonoBehaviour
     {
         PrepareWaves(); //подготавливаем волны. Будут созданы все юниты для данной игры.
 
-        while (!isGameOver)
+        while (!_isGameOver)
         {
             yield return new WaitForSeconds(delayBetweenWaves);
 
@@ -385,7 +361,7 @@ public class GameController : MonoBehaviour
 
     IEnumerator LifeCycleWave()
     {
-        Wave currentWave = wavesList[currentWaveNum - 1];
+        Wave currentWave = _wavesList[currentWaveNum - 1];
 
         CountUnits = currentWave.units.Count;
 
@@ -397,7 +373,7 @@ public class GameController : MonoBehaviour
         //Поочереди спавним юнитов с неким интервалом
         for (int i = 0; i < currentWave.units.Count; i++)
         {
-            spawner.Spawn(currentWave.units[i]);
+            _spawner.Spawn(currentWave.units[i]);
             yield return new WaitForSeconds(delayBetweenSpawnUnits);
         }
         //После спавна всех юнитов запускам цикл проверки
@@ -421,5 +397,39 @@ public class GameController : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        BotAI.OnFinishEvent += DecreaseLifes;
+        Unit.OnDieEvent += GetRewardForKill;
+        Unit.OnDisableEvent += DecreaseUnitsCount;
+    }
+
+    private void OnDisable()
+    {
+        BotAI.OnFinishEvent -= DecreaseLifes;
+        Unit.OnDieEvent -= GetRewardForKill;
+        Unit.OnDisableEvent -= DecreaseUnitsCount;
+    }
+
+    private void Awake()
+    {
+        _instance = this;
+        currentLevel = PlayerPrefs.GetInt("Level", 0);
+        Instantiate(levelPrefabs[currentLevel]);
+    }
+
+    private void Start()
+    {
+        if (!dontLoadPrefs)
+        {
+            LoadPrefs();
+        }
+        else
+        {
+            InitWithoutLoadPrefs();
+        }
+
+        InitializeGame();
+    }
 
 }

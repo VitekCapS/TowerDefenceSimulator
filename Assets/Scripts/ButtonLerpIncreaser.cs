@@ -13,13 +13,8 @@ public class ButtonLerpIncreaser : MonoBehaviour, IPointerDownHandler, IPointerU
     [Range(0.02f, 0.99f)]
     public float minInterval;
 
-    private Button myButton;
+    private Button _myButton;
 
-    private void Awake()
-    {
-        if (!myButton)
-            myButton = GetComponent<Button>();
-    }
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -31,20 +26,15 @@ public class ButtonLerpIncreaser : MonoBehaviour, IPointerDownHandler, IPointerU
         StopCoroutine("ValueChanger");
     }
 
-    //public void OnPointerExit(PointerEventData eventData)
-    //{
-    //    isEndOfChanging = true;
-    //}
-
     IEnumerator ValueChanger()
     {
         float interval = startInterval;
         while (true)
         {
             yield return new WaitForSecondsRealtime(interval);
-            if (myButton.onClick != null)
+            if (_myButton.onClick != null)
             {
-                myButton.onClick.Invoke();
+                _myButton.onClick.Invoke();
                 interval *= lerpSpeed;
                 if (interval < minInterval)
                 {
@@ -53,4 +43,12 @@ public class ButtonLerpIncreaser : MonoBehaviour, IPointerDownHandler, IPointerU
             }
         }
     }
+
+
+    private void Awake()
+    {
+        if (!_myButton)
+            _myButton = GetComponent<Button>();
+    }
+
 }

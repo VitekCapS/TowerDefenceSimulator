@@ -11,8 +11,7 @@ public class Waypoint : MonoBehaviour
     [SerializeField]
     private Color gizmosColor;
 
-    // Use this for initialization
-    void Start()
+    private void Start()
     {
         if (isFinish && nextWaypoint != null)
         {

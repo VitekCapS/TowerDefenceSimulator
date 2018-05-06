@@ -7,13 +7,6 @@ public class TowerController : MonoBehaviour
 {
 
     public ClickState clickState = ClickState.Default;
-    public enum ClickState
-    {
-        Default,
-        PlacingTower,
-        TowerSelect
-    }
-
     public int indexPlacingTower;
     public int indexSelectedTower;
     public GameObject placingTower;
@@ -23,27 +16,18 @@ public class TowerController : MonoBehaviour
 
     public List<BasicTower> towers;
 
-    private Vector3 tapPosition;
-    private MeshRenderer placingBlankMesh;
+    private Vector3 _tapPosition;
+    private MeshRenderer _placingBlankMesh;
 
     public delegate void TowerEventHandler(int x);
+
     public static event TowerEventHandler OnBuyTower, OnSellTower;
 
-
-    private void OnEnable()
+    public enum ClickState
     {
-        BasicTower.OnClickTower += SelectTower;
-    }
-
-    private void OnDisable()
-    {
-        BasicTower.OnClickTower -= SelectTower;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        ClickStateBehaviour();
+        Default,
+        PlacingTower,
+        TowerSelect
     }
 
     /// <summary>
@@ -122,10 +106,10 @@ public class TowerController : MonoBehaviour
             case ClickState.Default:
                 break;
             case ClickState.PlacingTower:
-                tapPosition = Input.mousePosition;
+                _tapPosition = Input.mousePosition;
 
                 RaycastHit hit;
-                Physics.Raycast(Camera.main.ScreenPointToRay(tapPosition), out hit);
+                Physics.Raycast(Camera.main.ScreenPointToRay(_tapPosition), out hit);
 
                 if (CheckPlace(hit) && !IsPointerOnUI())
                 {
@@ -153,7 +137,7 @@ public class TowerController : MonoBehaviour
                 break;
             case ClickState.PlacingTower:
                 placingTower = Instantiate(GameController.Instance.towerTemps[indexPlacingTower]);
-                placingBlankMesh = placingTower.transform.GetChild(0).GetComponent<MeshRenderer>();
+                _placingBlankMesh = placingTower.transform.GetChild(0).GetComponent<MeshRenderer>();
                 break;
             case ClickState.TowerSelect:
                 selectedTower = towers[indexSelectedTower];
@@ -164,7 +148,7 @@ public class TowerController : MonoBehaviour
     }
 
     /// <summary>
-    /// Главная функция
+    /// Главная функция работы текущего состояния контроллера
     /// </summary>
     private void ClickStateBehaviour()
     {
@@ -173,10 +157,10 @@ public class TowerController : MonoBehaviour
             case ClickState.Default:
                 break;
             case ClickState.PlacingTower:
-                tapPosition = Input.mousePosition;
+                _tapPosition = Input.mousePosition;
 
                 RaycastHit hit;
-                Physics.Raycast(Camera.main.ScreenPointToRay(tapPosition), out hit);
+                Physics.Raycast(Camera.main.ScreenPointToRay(_tapPosition), out hit);
 
                 placingTower.transform.position = hit.point;
 
@@ -186,7 +170,7 @@ public class TowerController : MonoBehaviour
             case ClickState.TowerSelect:
                 if (Input.GetMouseButtonDown(0))
                 {
-                    tapPosition = Input.mousePosition;
+                    _tapPosition = Input.mousePosition;
                     if (!IsPointerOnUI())
                     {
                         ChangeClickState(ClickState.Default);
@@ -196,7 +180,7 @@ public class TowerController : MonoBehaviour
                 {
                     if (Input.GetTouch(0).phase == TouchPhase.Began)
                     {
-                        tapPosition = Input.GetTouch(0).position;
+                        _tapPosition = Input.GetTouch(0).position;
                         if (!IsPointerOnUI())
                         {
                                 ChangeClickState(ClickState.Default);
@@ -206,40 +190,16 @@ public class TowerController : MonoBehaviour
                 break;
         }
     }
+
     private bool IsPointerOnUI()
     {
         PointerEventData pointerEventData = new PointerEventData(EventSystem.current);
-        pointerEventData.position = tapPosition;
+        pointerEventData.position = _tapPosition;
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(pointerEventData, results);
         return results.FindIndex(r => r.gameObject.layer == 5) > -1;
     }
 
-    //private bool RaycastToCursorPosition()
-    //{
-    //    RaycastHit hitInfo;
-    //    if (Physics.Raycast(Camera.main.ScreenPointToRay(tapPosition), out hitInfo))
-    //    {
-    //        if (!IsPointerOnUI())
-    //        {
-    //            if (!hitInfo.collider.CompareTag("Tower"))
-    //            {
-    //                if (IsPointerOnUI())
-    //                    return false;
-    //                else
-    //                    return true;
-    //            }
-    //            else
-    //            {
-    //                return false;
-    //            }
-    //        }
-    //    }
-    //    else
-    //    {
-    //        return true;
-    //    }
-    //}
     /// <summary>
     /// Функция проверки местности на возможность размещения башни. Если можно, то вернет true.
     /// </summary>
@@ -249,15 +209,33 @@ public class TowerController : MonoBehaviour
     {
         if (hit.collider.CompareTag("CanBuild"))
         {
-            if (placingBlankMesh.material != canBuildMaterial)
-                placingBlankMesh.material = canBuildMaterial;
+            if (_placingBlankMesh.material != canBuildMaterial)
+                _placingBlankMesh.material = canBuildMaterial;
             return true;
         }
         else
         {
-            if (placingBlankMesh.material != canNotBuildMaterial)
-                placingBlankMesh.material = canNotBuildMaterial;
+            if (_placingBlankMesh.material != canNotBuildMaterial)
+                _placingBlankMesh.material = canNotBuildMaterial;
             return false;
         }
     }
+
+    private void OnEnable()
+    {
+        BasicTower.OnClickTower += SelectTower;
+    }
+
+    private void OnDisable()
+    {
+        BasicTower.OnClickTower -= SelectTower;
+    }
+
+    // Update is called once per frame
+    private void Update()
+    {
+        ClickStateBehaviour();
+    }
+
+
 }

@@ -7,49 +7,63 @@ using UnityEngine.UI;
 
 public class MenuController : MonoBehaviour
 {
-
-    private static MenuController m_Instance;
+    #region Singleton
+    private static MenuController _instance;
     public static MenuController Instance
     {
-        get { return m_Instance; }
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindObjectOfType<MenuController>() ?? new MenuController();
+            }
+            return _instance;
+        }
     }
+    #endregion
 
-    public int minCoins = 25;
-    public int maxUnits = 30;
-    public int maxWaves = 10;
     [SerializeField]
-    private int wavesCount = 5;
+    private int _minCoins = 25;
     [SerializeField]
-    private int lifesCount = 10;
+    private int _maxUnits = 30;
     [SerializeField]
-    private int startCoins = 50;
-    private int currentWaveId;
-    public int groundUnitIndex;
-    public int groundUnitsCount;
-    public int airUnitIndex;
-    public int airUnitsCount;
-    public int bossIndex;
-    public int bossCount;
+    private int _maxWaves = 10;
+    [SerializeField]
+    private int _wavesCount = 5;
+    [SerializeField]
+    private int _lifesCount = 10;
+    [SerializeField]
+    private int _startCoins = 50;
+
     [Header("UI")]
-    public Text waveCountText;
-    public Text lifeCountText;
-    public Text startCoinsText;
+    [SerializeField] private Text waveCountText;
+    [SerializeField] private Text lifeCountText;
+    [SerializeField] private Text startCoinsText;
     [Space(5)]
-    public Text currentWaveText;
-    public Text groundUnitsCountText;
-    public Text groundUnitsType;
-    public Text airUnitsCountText;
-    public Text airUnitsType;
-    public Text bossCountText;
-    public Text bossTypeText;
+    [SerializeField] private Text currentWaveText;
+    [SerializeField] private Text groundUnitsCountText;
+    [SerializeField] private Text groundUnitsType;
+    [SerializeField] private Text airUnitsCountText;
+    [SerializeField] private Text airUnitsType;
+    [SerializeField] private Text bossCountText;
+    [SerializeField] private Text bossTypeText;
     [Space(4)]
-    public GameObject popupUnitInfo;
-    public List<GameObject> unitsPrefabs;
-    public List<GameObject> bossesPrefabs;
+    [SerializeField] private GameObject popupUnitInfo;
+    [SerializeField] private List<GameObject> unitsPrefabs;
+    [SerializeField] private List<GameObject> bossesPrefabs;
 
-    public List<WaveInfo> wavesInfo = new List<WaveInfo>();
-    private List<Unit> m_unitsPrefabsInfo = new List<Unit>();
-    private List<Unit> m_bossesPrefabsInfo = new List<Unit>();
+    [SerializeField] private List<WaveInfo> wavesInfo = new List<WaveInfo>();
+
+    private List<Unit> _unitsPrefabsInfo = new List<Unit>();
+    private List<Unit> _bossesPrefabsInfo = new List<Unit>();
+
+    private int _currentWaveId;
+    private int _groundUnitIndex;
+    private int _groundUnitsCount;
+    private int _airUnitIndex;
+    private int _airUnitsCount;
+    private int _bossIndex;
+    private int _bossCount;
 
     #region Properties
 
@@ -57,18 +71,18 @@ public class MenuController : MonoBehaviour
     {
         get
         {
-            return wavesCount;
+            return _wavesCount;
         }
 
         set
         {
             if (value >= 1)
-                wavesCount = value;
-            if (value > maxWaves)
-                wavesCount = maxWaves;
-            if (wavesCount < currentWaveId + 1)
-                CurrentWave = wavesCount;
-            waveCountText.text = wavesCount.ToString();
+                _wavesCount = value;
+            if (value > _maxWaves)
+                _wavesCount = _maxWaves;
+            if (_wavesCount < _currentWaveId + 1)
+                CurrentWave = _wavesCount;
+            waveCountText.text = _wavesCount.ToString();
         }
     }
 
@@ -76,17 +90,17 @@ public class MenuController : MonoBehaviour
     {
         get
         {
-            return lifesCount;
+            return _lifesCount;
         }
 
         set
         {
             if (value >= 0)
-                lifesCount = value;
+                _lifesCount = value;
             else
-                lifesCount = 0;
+                _lifesCount = 0;
 
-            lifeCountText.text = lifesCount.ToString();
+            lifeCountText.text = _lifesCount.ToString();
         }
     }
 
@@ -94,16 +108,16 @@ public class MenuController : MonoBehaviour
     {
         get
         {
-            return startCoins;
+            return _startCoins;
         }
 
         set
         {
-            if (value < minCoins)
-                startCoins = minCoins;
+            if (value < _minCoins)
+                _startCoins = _minCoins;
             else
-                startCoins = value;
-            startCoinsText.text = startCoins.ToString();
+                _startCoins = value;
+            startCoinsText.text = _startCoins.ToString();
         }
     }
 
@@ -111,81 +125,61 @@ public class MenuController : MonoBehaviour
     {
         get
         {
-            return currentWaveId;
+            return _currentWaveId;
         }
 
         set
         {
             if (value < 0)
-                currentWaveId = wavesCount - 1;
+                _currentWaveId = _wavesCount - 1;
             else
-            if (value >= wavesCount)
-                currentWaveId = 0;
+            if (value >= _wavesCount)
+                _currentWaveId = 0;
             else
-                currentWaveId = value;
-            currentWaveText.text = (currentWaveId + 1).ToString();
+                _currentWaveId = value;
+            currentWaveText.text = (_currentWaveId + 1).ToString();
 
-            UpdateWaveSettingsUI(currentWaveId);
+            UpdateWaveSettingsUI(_currentWaveId);
         }
     }
 
     #endregion
 
-    private void Awake()
-    {
-        m_Instance = this;
-    }
-
-    // Use this for initialization
-    void Start()
-    {
-        CheckPrefabs();
-
-        LoadPrefs();
-        CurrentWave = 0;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void UpdateWaveSettingsUI(int id)
     {
-        airUnitsCount = 0;
-        airUnitIndex = m_unitsPrefabsInfo.FindIndex(x => x.unitType == Unit.UnitType.Air);
-        groundUnitsCount = 0;
-        groundUnitIndex = m_unitsPrefabsInfo.FindIndex(x => x.unitType == Unit.UnitType.Ground);
-        bossCount = 0;
+        _airUnitsCount = 0;
+        _airUnitIndex = _unitsPrefabsInfo.FindIndex(x => x.unitType == Unit.UnitType.Air);
+        _groundUnitsCount = 0;
+        _groundUnitIndex = _unitsPrefabsInfo.FindIndex(x => x.unitType == Unit.UnitType.Ground);
+        _bossCount = 0;
 
         foreach (KeyValuePair<WaveInfo.UnitInfo, int> keyPair in wavesInfo[id].dictionaryUnits)
         {
             switch (keyPair.Key.unitType)
             {
                 case Unit.UnitType.Ground:
-                    groundUnitIndex = unitsPrefabs.IndexOf(keyPair.Key.unitPrefab);
-                    groundUnitsCount = keyPair.Value;
+                    _groundUnitIndex = unitsPrefabs.IndexOf(keyPair.Key.unitPrefab);
+                    _groundUnitsCount = keyPair.Value;
                     break;
                 case Unit.UnitType.Air:
-                    airUnitIndex = unitsPrefabs.IndexOf(keyPair.Key.unitPrefab);
-                    airUnitsCount = keyPair.Value;
+                    _airUnitIndex = unitsPrefabs.IndexOf(keyPair.Key.unitPrefab);
+                    _airUnitsCount = keyPair.Value;
                     break;
             }
         }
 
         foreach (KeyValuePair<WaveInfo.UnitInfo, int> keyPair in wavesInfo[id].dictionaryBosses)
         {
-            bossIndex = bossesPrefabs.IndexOf(keyPair.Key.unitPrefab);
-            bossCount = keyPair.Value;
+            _bossIndex = bossesPrefabs.IndexOf(keyPair.Key.unitPrefab);
+            _bossCount = keyPair.Value;
         }
 
-        groundUnitsCountText.text = groundUnitsCount.ToString();
-        groundUnitsType.text = unitsPrefabs[groundUnitIndex].name;
-        airUnitsCountText.text = airUnitsCount.ToString();
-        airUnitsType.text = unitsPrefabs[airUnitIndex].name;
-        bossCountText.text = bossCount.ToString();
-        bossTypeText.text = bossesPrefabs[bossIndex].name;
+        groundUnitsCountText.text = _groundUnitsCount.ToString();
+        groundUnitsType.text = unitsPrefabs[_groundUnitIndex].name;
+        airUnitsCountText.text = _airUnitsCount.ToString();
+        airUnitsType.text = unitsPrefabs[_airUnitIndex].name;
+        bossCountText.text = _bossCount.ToString();
+        bossTypeText.text = bossesPrefabs[_bossIndex].name;
     }
 
     public void GroundUnitDetailInfoClick()
@@ -215,59 +209,59 @@ public class MenuController : MonoBehaviour
 
     public void ChangeCountGroundUnits(int x)
     {
-        groundUnitsCount += x;
-        CheckMinMaxCountValue(ref groundUnitsCount);
+        _groundUnitsCount += x;
+        CheckMinMaxCountValue(ref _groundUnitsCount);
 
-        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(Unit.UnitType.Ground, unitsPrefabs[groundUnitIndex]);
+        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(Unit.UnitType.Ground, unitsPrefabs[_groundUnitIndex]);
 
-        if (wavesInfo[currentWaveId].dictionaryUnits.ContainsKey(unitInfo))
+        if (wavesInfo[_currentWaveId].dictionaryUnits.ContainsKey(unitInfo))
         {
-            wavesInfo[currentWaveId].dictionaryUnits[unitInfo] = groundUnitsCount;
+            wavesInfo[_currentWaveId].dictionaryUnits[unitInfo] = _groundUnitsCount;
         }
         else
         {
-            wavesInfo[currentWaveId].dictionaryUnits.Add(unitInfo, groundUnitsCount);
+            wavesInfo[_currentWaveId].dictionaryUnits.Add(unitInfo, _groundUnitsCount);
         }
 
-        groundUnitsCountText.text = groundUnitsCount.ToString();
+        groundUnitsCountText.text = _groundUnitsCount.ToString();
     }
 
     public void ChangeCountAirUnits(int x)
     {
-        airUnitsCount += x;
-        CheckMinMaxCountValue(ref airUnitsCount);
+        _airUnitsCount += x;
+        CheckMinMaxCountValue(ref _airUnitsCount);
 
-        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(Unit.UnitType.Air, unitsPrefabs[airUnitIndex]);
+        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(Unit.UnitType.Air, unitsPrefabs[_airUnitIndex]);
 
-        if (wavesInfo[currentWaveId].dictionaryUnits.ContainsKey(unitInfo))
+        if (wavesInfo[_currentWaveId].dictionaryUnits.ContainsKey(unitInfo))
         {
-            wavesInfo[currentWaveId].dictionaryUnits[unitInfo] = airUnitsCount;
+            wavesInfo[_currentWaveId].dictionaryUnits[unitInfo] = _airUnitsCount;
         }
         else
         {
-            wavesInfo[currentWaveId].dictionaryUnits.Add(unitInfo, airUnitsCount);
+            wavesInfo[_currentWaveId].dictionaryUnits.Add(unitInfo, _airUnitsCount);
         }
 
-        airUnitsCountText.text = airUnitsCount.ToString();
+        airUnitsCountText.text = _airUnitsCount.ToString();
     }
 
     public void ChangeCountBosses(int x)
     {
-        bossCount += x;
-        CheckMinMaxCountValue(ref bossCount);
+        _bossCount += x;
+        CheckMinMaxCountValue(ref _bossCount);
 
-        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(bossesPrefabs[bossIndex].GetComponent<Unit>().unitType, bossesPrefabs[bossIndex]);
+        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(bossesPrefabs[_bossIndex].GetComponent<Unit>().unitType, bossesPrefabs[_bossIndex]);
 
-        if (wavesInfo[currentWaveId].dictionaryBosses.ContainsKey(unitInfo))
+        if (wavesInfo[_currentWaveId].dictionaryBosses.ContainsKey(unitInfo))
         {
-            wavesInfo[currentWaveId].dictionaryBosses[unitInfo] = bossCount;
+            wavesInfo[_currentWaveId].dictionaryBosses[unitInfo] = _bossCount;
         }
         else
         {
-            wavesInfo[currentWaveId].dictionaryBosses.Add(unitInfo, bossCount);
+            wavesInfo[_currentWaveId].dictionaryBosses.Add(unitInfo, _bossCount);
         }
 
-        bossCountText.text = bossCount.ToString();
+        bossCountText.text = _bossCount.ToString();
     }
 
     /// <summary>
@@ -276,17 +270,17 @@ public class MenuController : MonoBehaviour
     /// <param name="x">Число, указывающее в какую сторону будем менять значение</param>
     public void ChangeTypeGroundUnit(int x)
     {
-        ChangeTypeIndexValue(ref groundUnitIndex, x, Unit.UnitType.Ground);
+        ChangeTypeIndexValue(ref _groundUnitIndex, x, Unit.UnitType.Ground);
 
-        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(Unit.UnitType.Ground, unitsPrefabs[groundUnitIndex]);
-        groundUnitsCount = 0;
-        if (!wavesInfo[currentWaveId].dictionaryUnits.TryGetValue(unitInfo, out groundUnitsCount))
+        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(Unit.UnitType.Ground, unitsPrefabs[_groundUnitIndex]);
+        _groundUnitsCount = 0;
+        if (!wavesInfo[_currentWaveId].dictionaryUnits.TryGetValue(unitInfo, out _groundUnitsCount))
         {
-            wavesInfo[currentWaveId].dictionaryUnits.Add(unitInfo, groundUnitsCount);
+            wavesInfo[_currentWaveId].dictionaryUnits.Add(unitInfo, _groundUnitsCount);
         }
 
-        groundUnitsType.text = unitsPrefabs[groundUnitIndex].name;
-        groundUnitsCountText.text = groundUnitsCount.ToString();
+        groundUnitsType.text = unitsPrefabs[_groundUnitIndex].name;
+        groundUnitsCountText.text = _groundUnitsCount.ToString();
     }
 
     /// <summary>
@@ -295,17 +289,17 @@ public class MenuController : MonoBehaviour
     /// <param name="x">Число, указывающее в какую сторону будем менять значение</param>
     public void ChangeTypeAirUnit(int x)
     {
-        ChangeTypeIndexValue(ref airUnitIndex, x, Unit.UnitType.Air);
+        ChangeTypeIndexValue(ref _airUnitIndex, x, Unit.UnitType.Air);
 
-        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(Unit.UnitType.Air, unitsPrefabs[airUnitIndex]);
-        airUnitsCount = 0;
-        if (!wavesInfo[currentWaveId].dictionaryUnits.TryGetValue(unitInfo, out airUnitsCount))
+        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(Unit.UnitType.Air, unitsPrefabs[_airUnitIndex]);
+        _airUnitsCount = 0;
+        if (!wavesInfo[_currentWaveId].dictionaryUnits.TryGetValue(unitInfo, out _airUnitsCount))
         {
-            wavesInfo[currentWaveId].dictionaryUnits.Add(unitInfo, airUnitsCount);
+            wavesInfo[_currentWaveId].dictionaryUnits.Add(unitInfo, _airUnitsCount);
         }
 
-        airUnitsType.text = unitsPrefabs[airUnitIndex].name;
-        airUnitsCountText.text = airUnitsCount.ToString();
+        airUnitsType.text = unitsPrefabs[_airUnitIndex].name;
+        airUnitsCountText.text = _airUnitsCount.ToString();
     }
 
     /// <summary>
@@ -314,28 +308,28 @@ public class MenuController : MonoBehaviour
     /// <param name="x">Число, указывающее в какую сторону будем менять значение</param>
     public void ChangeTypeBossUnit(int x)
     {
-        bossIndex += x;
-        if (bossIndex < 0)
-            bossIndex = bossesPrefabs.Count - 1;
-        if (bossIndex >= bossesPrefabs.Count)
-            bossIndex = 0;
+        _bossIndex += x;
+        if (_bossIndex < 0)
+            _bossIndex = bossesPrefabs.Count - 1;
+        if (_bossIndex >= bossesPrefabs.Count)
+            _bossIndex = 0;
 
-        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(bossesPrefabs[bossIndex].GetComponent<Unit>().unitType, bossesPrefabs[bossIndex]);
-        bossCount = 0;
-        if (!wavesInfo[currentWaveId].dictionaryBosses.TryGetValue(unitInfo, out bossCount))
+        WaveInfo.UnitInfo unitInfo = new WaveInfo.UnitInfo(bossesPrefabs[_bossIndex].GetComponent<Unit>().unitType, bossesPrefabs[_bossIndex]);
+        _bossCount = 0;
+        if (!wavesInfo[_currentWaveId].dictionaryBosses.TryGetValue(unitInfo, out _bossCount))
         {
-            wavesInfo[currentWaveId].dictionaryBosses.Add(unitInfo, bossCount);
+            wavesInfo[_currentWaveId].dictionaryBosses.Add(unitInfo, _bossCount);
         }
 
-        bossTypeText.text = bossesPrefabs[bossIndex].name;
-        bossCountText.text = bossCount.ToString();
+        bossTypeText.text = bossesPrefabs[_bossIndex].name;
+        bossCountText.text = _bossCount.ToString();
     }
 
     public void SavePrefs()
     {
-        PlayerPrefs.SetInt("startCoins", startCoins);
-        PlayerPrefs.SetInt("startLifes", lifesCount);
-        PlayerPrefs.SetInt("wavesCount", wavesCount);
+        PlayerPrefs.SetInt("startCoins", _startCoins);
+        PlayerPrefs.SetInt("startLifes", _lifesCount);
+        PlayerPrefs.SetInt("wavesCount", _wavesCount);
 
         for (int id = 0; id < wavesInfo.Count; id++)
         {
@@ -366,8 +360,8 @@ public class MenuController : MonoBehaviour
     {
         if (count < 0)
             count = 0;
-        if (count > maxUnits)
-            count = maxUnits;
+        if (count > _maxUnits)
+            count = _maxUnits;
     }
 
     private void ChangeTypeIndexValue(ref int index, int x, Unit.UnitType checkedType)
@@ -404,7 +398,7 @@ public class MenuController : MonoBehaviour
             Unit unitInfo = prefab.GetComponent<Unit>();
             if (unitInfo)
             {
-                m_unitsPrefabsInfo.Add(unitInfo);
+                _unitsPrefabsInfo.Add(unitInfo);
             }
             else
             {
@@ -420,7 +414,7 @@ public class MenuController : MonoBehaviour
             {
                 if (!unitInfo.isBoss)
                     Debug.LogWarning("Для префаба босса " + prefab.name + " не установлен флаг isBoss");
-                m_bossesPrefabsInfo.Add(unitInfo);
+                _bossesPrefabsInfo.Add(unitInfo);
             }
             else
             {
@@ -432,12 +426,12 @@ public class MenuController : MonoBehaviour
 
     private void LoadPrefs()
     {
-        StartCoins = PlayerPrefs.GetInt("startCoins", startCoins);
-        LifesCount = PlayerPrefs.GetInt("startLifes", lifesCount);
-        WavesCount = PlayerPrefs.GetInt("wavesCount", wavesCount);
+        StartCoins = PlayerPrefs.GetInt("startCoins", _startCoins);
+        LifesCount = PlayerPrefs.GetInt("startLifes", _lifesCount);
+        WavesCount = PlayerPrefs.GetInt("wavesCount", _wavesCount);
         wavesInfo = new List<WaveInfo>();
 
-        for (int i = 0; i < maxWaves; i++)
+        for (int i = 0; i < _maxWaves; i++)
         {
             WaveInfo waveInfo = new WaveInfo();
 
@@ -466,5 +460,17 @@ public class MenuController : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        _instance = this;
+    }
+
+    private void Start()
+    {
+        CheckPrefabs();
+
+        LoadPrefs();
+        CurrentWave = 0;
+    }
 
 }

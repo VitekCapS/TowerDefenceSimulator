@@ -18,12 +18,11 @@ public class HealthBar : MonoBehaviour {
         unit.OnHealthValueChanged -= UpdateSlider;
     }
 
-    // Use this for initialization
-    void Start () {
+    private void Start () {
         slider.value = 1;
 	}
 	
-    void UpdateSlider(params int[] args)
+    private void UpdateSlider(params int[] args)
     {
         float health = args[0];
         float maxHealth = args[1];

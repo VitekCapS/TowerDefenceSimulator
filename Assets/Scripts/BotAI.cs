@@ -7,30 +7,30 @@ using UnityEngine;
 public class BotAI : MonoBehaviour
 {
 
+    public Unit bot;
+    public State currentState = State.Move;
+    public Waypoint[] waypoints;
+
+    private Waypoint _currentWaypoint;
+
+    public delegate void FinishReachedEventHandler(Unit unit);
+
+    public static event FinishReachedEventHandler OnFinishEvent;
+
     public enum State
     {
         Move,
         Dead
     }
 
-    public Unit bot;
-    public State currentState = State.Move;
-    public Waypoint[] waypoints;
 
-    private Waypoint currentWaypoint;
-
-    public delegate void FinishReachedEventHandler(Unit unit);
-    public static event FinishReachedEventHandler OnFinishEvent;
-
-    // Use this for initialization
-    void Start()
+    protected virtual void Start()
     {
         waypoints = FindObjectsOfType<Waypoint>();
-        currentWaypoint = waypoints.First(x => x.isStart);
+        _currentWaypoint = waypoints.First(x => x.isStart);
     }
 
-    // Update is called once per frame
-    void Update()
+    protected virtual void Update()
     {
         StateBehaviour();
     }
@@ -40,7 +40,7 @@ public class BotAI : MonoBehaviour
         switch (currentState)
         {
             case State.Move:
-                MoveToWaypoint(currentWaypoint);
+                MoveToWaypoint(_currentWaypoint);
                 break;
             case State.Dead:
                 break;
@@ -74,7 +74,7 @@ public class BotAI : MonoBehaviour
 
     }
 
-    private float m_partOfStep = 1; //переменная доли шага юнита (при достаточно высокой скорости либо при малом fps призвана устранять рывки передвижения)
+    private float _partOfStep = 1; //переменная доли шага юнита (при достаточно высокой скорости либо при малом fps призвана устранять рывки передвижения)
 
     public void MoveToWaypoint(Waypoint waypoint)
     {
@@ -84,13 +84,13 @@ public class BotAI : MonoBehaviour
         //Перемещаем бота в нужном направлении если на этом шаге он не "перескочит" точку
         if (dir.sqrMagnitude >= sqrSpeed)
         {
-            Vector3 newPos = Vector3.MoveTowards(transform.position, currentWaypoint.transform.position, bot.Speed * Time.deltaTime);
+            Vector3 newPos = Vector3.MoveTowards(transform.position, _currentWaypoint.transform.position, bot.Speed * Time.deltaTime);
             bot.transform.position = newPos;
-            m_partOfStep = 1;
+            _partOfStep = 1;
         }
         else
         {
-            m_partOfStep = dir.sqrMagnitude / sqrSpeed;
+            _partOfStep = dir.sqrMagnitude / sqrSpeed;
 
             if (!waypoint.isFinish)
             {
@@ -107,7 +107,7 @@ public class BotAI : MonoBehaviour
 
     public void NextWaypoint()
     {
-        currentWaypoint = currentWaypoint.nextWaypoint;
+        _currentWaypoint = _currentWaypoint.nextWaypoint;
     }
 
 }

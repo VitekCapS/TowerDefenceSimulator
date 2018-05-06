@@ -6,35 +6,29 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
-    [SerializeField, Range(0, 1), Tooltip("Процент снижения урона при попадании")]
-    protected float defence = 0.01f;
-    [SerializeField]
-    protected int healthMax = 1;
-    [SerializeField]
-    protected int reward = 1;
-    [SerializeField]
-    protected int damageToLifes = 1;
-    [SerializeField]
-    protected float speed = 0.1f;
-    protected float speedMultiplier = 1;
-
-    protected int health;
-
-    public enum UnitType
-    {
-        Ground,
-        Air
-    }
-
     public UnitType unitType = UnitType.Ground;
     public bool isBoss = false;
+
+    [SerializeField, Range(0, 1), Tooltip("Процент снижения урона при попадании")]
+    protected float _defence = 0.01f;
+    [SerializeField]
+    protected int _healthMax = 1;
+    [SerializeField]
+    protected int _reward = 1;
+    [SerializeField]
+    protected int _damageToLifes = 1;
+    [SerializeField]
+    protected float _speed = 0.1f;
+    protected float _speedMultiplier = 1;
+
+    protected int _currentHealth;
+
+    private List<Effect> effects = new List<Effect>(); //бафы, дебафы и прочее
+
 
     public delegate void UnitValueHasChanged(params int[] args);
     public delegate void UnitDieEventHandler(Unit unit);
 
-    /// <summary>
-    /// Сколько урона получено юнитом
-    /// </summary>
     public static event UnitValueHasChanged OnDamageTaken;
     public static event UnitDieEventHandler OnDieEvent;
     public static event Action OnDisableEvent;
@@ -44,70 +38,63 @@ public class Unit : MonoBehaviour
     /// </summary>
     public event UnitValueHasChanged OnHealthValueChanged;
 
-    private List<Effect> effects = new List<Effect>(); //бафы, дебафы и прочее
+    public enum UnitType
+    {
+        Ground,
+        Air
+    }
 
     public float Defence
     {
-        get { return defence; }
-        set { defence = value; }
+        get { return _defence; }
+        set { _defence = value; }
     }
 
     public int Health
     {
-        get { return health; }
+        get { return _currentHealth; }
         set
         {
-            health = value;
+            _currentHealth = value;
 
-            if (health <= 0)
+            if (_currentHealth <= 0)
             {
-                health = 0;
+                _currentHealth = 0;
                 Die();
             }
             if (OnHealthValueChanged != null)
-                OnHealthValueChanged.Invoke(value >= 0 ? value : 0, healthMax);
+                OnHealthValueChanged.Invoke(value >= 0 ? value : 0, _healthMax);
         }
     }
 
     public int Reward
     {
-        get { return reward; }
-        set { reward = value; }
+        get { return _reward; }
+        set { _reward = value; }
     }
 
     public int DamageToLifes
     {
-        get { return damageToLifes; }
-        set { damageToLifes = value; }
+        get { return _damageToLifes; }
+        set { _damageToLifes = value; }
     }
 
     public float Speed
     {
-        get { return speed * speedMultiplier; }
-        set { speed = value; }
+        get { return _speed * _speedMultiplier; }
+        set { _speed = value; }
     }
 
     public float SpeedMultiplier
     {
-        get { return speedMultiplier; }
-        set { speedMultiplier = Mathf.Clamp01(value); }
+        get { return _speedMultiplier; }
+        set { _speedMultiplier = Mathf.Clamp01(value); }
     }
 
-    // Use this for initialization
-    void Start()
-    {
-        health = healthMax;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        ApplyEffects();
-    }
 
     public virtual void Damage(float damage)
     {
-        int damageTaken = (int)damage - (int)(damage * defence);
+        int damageTaken = (int)damage - (int)(damage * _defence);
         Health -= damageTaken;
 
         if (OnDamageTaken != null)
@@ -177,6 +164,11 @@ public class Unit : MonoBehaviour
         effects.OrderBy(ef => ef.priority);
     }
 
+    public virtual void Disable()
+    {
+        gameObject.SetActive(false);
+    }
+
     protected virtual void Die()
     {
         Disable();
@@ -185,15 +177,20 @@ public class Unit : MonoBehaviour
             OnDieEvent.Invoke(this);
     }
 
-    public virtual void Disable()
-    {
-        gameObject.SetActive(false);
-    }
-
     private void OnDisable()
     {
         if (OnDisableEvent != null)
             OnDisableEvent.Invoke();
+    }
+
+    private void Start()
+    {
+        _currentHealth = _healthMax;
+    }
+
+    private void Update()
+    {
+        ApplyEffects();
     }
 
 }

@@ -4,6 +4,22 @@ using UnityEngine;
 
 public class PoolManager : MonoBehaviour
 {
+    #region Singleton
+    protected static PoolManager _instance = null;
+    public static PoolManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindObjectOfType<PoolManager>() ?? new PoolManager();
+            }
+            return _instance;
+        }
+    }
+    #endregion
+
+
     [System.Serializable]
     public class PreloadedPrefab
     {
@@ -15,35 +31,8 @@ public class PoolManager : MonoBehaviour
 
     public List<PreloadedPrefab> PreloadedPrefabs = new List<PreloadedPrefab>();
 
-    protected Dictionary<string, List<GameObject>> m_AvailableObjects = new Dictionary<string, List<GameObject>>(); //доступные объекты в пулах.
-    protected Dictionary<string, int> m_UniquePrefabNames = new Dictionary<string, int>();  // используется для правильной идентификации
-
-    protected static PoolManager m_Instance = null;
-    public static PoolManager Instance { get { return m_Instance; } }
-
-    protected virtual void Awake()
-    {
-
-        m_Instance = this;
-
-    }
-
-    protected virtual void Start()
-    {
-
-        // добавляем все экземпляры объектов, которые должны быть предзагружены в пул
-        foreach (PreloadedPrefab obj in PreloadedPrefabs)
-        {
-            if (obj == null)
-                continue;
-            if (obj.Prefab == null)
-                continue;
-            if (obj.Amount < 1)
-                continue;
-            AddToPool(obj.Prefab, Vector3.zero, Quaternion.identity, obj.Amount);
-        }
-
-    }
+    protected Dictionary<string, List<GameObject>> _availableObjects = new Dictionary<string, List<GameObject>>(); //доступные объекты в пулах.
+    protected Dictionary<string, int> _uniquePrefabNames = new Dictionary<string, int>();  // используется для правильной идентификации
 
 
     /// <summary>
@@ -58,8 +47,8 @@ public class PoolManager : MonoBehaviour
         string uniqueName = GetUniqueNameOf(prefab);
 
         // если нет пула с таким префабом, то создаем его
-        if (!m_AvailableObjects.ContainsKey(uniqueName))
-            m_AvailableObjects.Add(uniqueName, new List<GameObject>());
+        if (!_availableObjects.ContainsKey(uniqueName))
+            _availableObjects.Add(uniqueName, new List<GameObject>());
 
         // создаем объекты в пуле
         for (int i = 0; i < amount; i++)
@@ -68,7 +57,7 @@ public class PoolManager : MonoBehaviour
             newObj.name = uniqueName;
             newObj.transform.parent = transform;
             newObj.SetActive(false);
-            m_AvailableObjects[uniqueName].Add(newObj);
+            _availableObjects[uniqueName].Add(newObj);
         }
 
     }
@@ -98,7 +87,7 @@ public class PoolManager : MonoBehaviour
 
         string uniqueName = GetUniqueNameOf(prefab);
 
-        if (m_AvailableObjects.TryGetValue(uniqueName, out availableObjects))
+        if (_availableObjects.TryGetValue(uniqueName, out availableObjects))
         {
 
             Retry:
@@ -162,7 +151,7 @@ public class PoolManager : MonoBehaviour
         string objName = obj.name;
         bool isChild = false;
         Retry:
-        m_AvailableObjects.TryGetValue(objName, out availableObjects);
+        _availableObjects.TryGetValue(objName, out availableObjects);
 
         if (availableObjects == null)
         {
@@ -191,22 +180,45 @@ public class PoolManager : MonoBehaviour
     protected string GetUniqueNameOf(GameObject prefab)
     {
         int id;
-        if (m_UniquePrefabNames.TryGetValue(prefab.name, out id))
+        if (_uniquePrefabNames.TryGetValue(prefab.name, out id))
         {
 
             if (prefab.GetInstanceID() == id)
                 return prefab.name;
 
             string newName = string.Join(" ", new string[] { prefab.name, prefab.GetInstanceID().ToString() });
-            if (!m_UniquePrefabNames.ContainsKey(newName))
-                m_UniquePrefabNames.Add(newName, prefab.GetInstanceID());
+            if (!_uniquePrefabNames.ContainsKey(newName))
+                _uniquePrefabNames.Add(newName, prefab.GetInstanceID());
             return newName;
 
         }
 
-        m_UniquePrefabNames.Add(prefab.name, prefab.GetInstanceID());
+        _uniquePrefabNames.Add(prefab.name, prefab.GetInstanceID());
 
         return prefab.name;
 
     }
+
+    protected virtual void Awake()
+    {
+        _instance = this;
+    }
+
+    protected virtual void Start()
+    {
+
+        // добавляем все экземпляры объектов, которые должны быть предзагружены в пул
+        foreach (PreloadedPrefab obj in PreloadedPrefabs)
+        {
+            if (obj == null)
+                continue;
+            if (obj.Prefab == null)
+                continue;
+            if (obj.Amount < 1)
+                continue;
+            AddToPool(obj.Prefab, Vector3.zero, Quaternion.identity, obj.Amount);
+        }
+
+    }
+
 }

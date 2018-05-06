@@ -12,35 +12,17 @@ public class Projectile : MonoBehaviour
     public Effect effect;
     public Transform target;
 
-    protected BasicTower owner;
+    protected BasicTower _owner;
+
+    private Vector3 _targetLastPosition;
+
     public BasicTower Owner
     {
-        get { return owner; }
+        get { return _owner; }
         set
         {
-            if (owner != value)
+            if (_owner != value)
                 OwnerChanged(value);
-        }
-    }
-
-    private Vector3 targetLastPosition;
-
-    private void OwnerChanged(BasicTower tower)
-    {
-        owner = tower;
-        damage = owner.damage;
-        speed = owner.projectileSpeed;
-    }
-
-    void Update()
-    {
-        if (target)
-        {
-            LifeCycle();
-        }
-        else
-        {
-            MoveTo(targetLastPosition);
         }
     }
 
@@ -61,7 +43,7 @@ public class Projectile : MonoBehaviour
         if (dir.sqrMagnitude >= _speed * _speed)
         {
             transform.Translate(dir.normalized * _speed);
-            targetLastPosition = position;
+            _targetLastPosition = position;
         }
         else
         {
@@ -85,6 +67,25 @@ public class Projectile : MonoBehaviour
 
         if (gameObject.activeSelf) //если не активен / не вернулся в пул => удаляем
             Destroy(this);
+    }
+
+    private void OwnerChanged(BasicTower tower)
+    {
+        _owner = tower;
+        damage = _owner.damage;
+        speed = _owner.projectileSpeed;
+    }
+
+    private void Update()
+    {
+        if (target)
+        {
+            LifeCycle();
+        }
+        else
+        {
+            MoveTo(_targetLastPosition);
+        }
     }
 
 }

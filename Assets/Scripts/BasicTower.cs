@@ -5,14 +5,6 @@ using UnityEngine;
 
 public class BasicTower : MonoBehaviour, IPointerClickHandler
 {
-
-    public enum TypeAim
-    {
-        Ground,
-        Air,
-        All
-    }
-
     public TypeAim typeAim = TypeAim.All;
     public int price;
     public int bid;
@@ -24,69 +16,83 @@ public class BasicTower : MonoBehaviour, IPointerClickHandler
     public GameObject selector;
     public Sprite image;
 
-    protected bool isAimed;
-    protected bool isReloading;
-    protected float reloadTimer;
-    protected float rangeSqr;
-    protected Transform currentTarget;
-    protected LayerMask layerMask;
+    protected bool _isAimed;
+    protected bool _isReloading;
+    protected float _reloadTimer;
+    protected float _rangeSqr;
+    protected Transform _currentTarget;
+    protected LayerMask _layerMask;
 
     public delegate void ClickEventHandler(BasicTower obj);
+
     public static event ClickEventHandler OnClickTower;
 
-    // Use this for initialization
-    void Start()
+    public enum TypeAim
     {
-        rangeSqr = range * range;
+        Ground,
+        Air,
+        All
+    }
+
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (OnClickTower != null)
+            OnClickTower.Invoke(this);
+    }
+
+
+    protected virtual void Start()
+    {
+        _rangeSqr = range * range;
 
         switch (typeAim)
         {
             case TypeAim.Ground:
-                layerMask = LayerMask.GetMask("GroundUnits");
+                _layerMask = LayerMask.GetMask("GroundUnits");
                 break;
             case TypeAim.Air:
-                layerMask = LayerMask.GetMask("AirUnits");
+                _layerMask = LayerMask.GetMask("AirUnits");
                 break;
             case TypeAim.All:
-                layerMask = LayerMask.GetMask("GroundUnits", "AirUnits");
+                _layerMask = LayerMask.GetMask("GroundUnits", "AirUnits");
                 break;
         }
 
         StartCoroutine(AimCoroutine());
     }
 
-    // Update is called once per frame
-    void Update()
+    protected virtual void Update()
     {
-        if (isReloading)
+        if (_isReloading)
         {
-            reloadTimer -= Time.deltaTime;
-            if (reloadTimer <= 0)
+            _reloadTimer -= Time.deltaTime;
+            if (_reloadTimer <= 0)
             {
-                reloadTimer = fireRate;
-                isReloading = false;
+                _reloadTimer = fireRate;
+                _isReloading = false;
             }
         }
 
-        if (isAimed && !isReloading)
+        if (_isAimed && !_isReloading)
         {
-            if ((currentTarget.transform.position - transform.position).sqrMagnitude > rangeSqr)
+            if ((_currentTarget.transform.position - transform.position).sqrMagnitude > _rangeSqr)
             {
-                isAimed = FindClosestTarget();
+                _isAimed = FindClosestTarget();
 
-                if (!isAimed)
+                if (!_isAimed)
                     StartCoroutine(AimCoroutine());
             }
-            else if (currentTarget.gameObject.activeInHierarchy)
+            else if (_currentTarget.gameObject.activeInHierarchy)
             {
                 Shoot();
-                isReloading = true;
+                _isReloading = true;
             }
             else
             {
-                isAimed = FindClosestTarget();
+                _isAimed = FindClosestTarget();
 
-                if (!isAimed)
+                if (!_isAimed)
                     StartCoroutine(AimCoroutine());
 
             }
@@ -98,33 +104,33 @@ public class BasicTower : MonoBehaviour, IPointerClickHandler
         GameObject go = PoolManager.Spawn(projectilePrefab, transform.position + Vector3.up * 2, Quaternion.identity);
         Projectile projectile = go.GetComponent<Projectile>();
         projectile.Owner = this;
-        projectile.target = currentTarget;
+        projectile.target = _currentTarget;
     }
 
     protected virtual bool FindClosestTarget()
     {
-        Collider[] colliders = Physics.OverlapCapsule(transform.position + Vector3.up * 3, transform.position, range, layerMask.value);
+        Collider[] colliders = Physics.OverlapCapsule(transform.position + Vector3.up * 3, transform.position, range, _layerMask.value);
         float sqrDistance;
         for (int i = 0; i < colliders.Length; i++)
         {
             sqrDistance = (colliders[i].transform.position - transform.position).sqrMagnitude;
-            if (sqrDistance < rangeSqr)
+            if (sqrDistance < _rangeSqr)
             {
-                currentTarget = colliders[i].transform;
+                _currentTarget = colliders[i].transform;
                 return true;
             }
 
         }
-        currentTarget = null;
+        _currentTarget = null;
         return false;
     }
 
     IEnumerator AimCoroutine()
     {
-        while (!isAimed)
+        while (!_isAimed)
         {
             yield return new WaitForSeconds(0.5f);
-            isAimed = FindClosestTarget();
+            _isAimed = FindClosestTarget();
         }
     }
 
@@ -133,9 +139,4 @@ public class BasicTower : MonoBehaviour, IPointerClickHandler
         Gizmos.DrawWireSphere(transform.position, range);
     }
 
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        if (OnClickTower != null)
-            OnClickTower.Invoke(this);
-    }
 }

@@ -6,11 +6,20 @@ using UnityEngine.UI;
 
 public class UIController : MonoBehaviour {
 
+    #region Singleton
     private static UIController m_Instance;
     public static UIController Instance
     {
-        get { return m_Instance; }
+        get
+        {
+            if (m_Instance == null)
+            {
+                m_Instance = FindObjectOfType<UIController>() ?? new UIController();
+            }
+            return m_Instance;
+        }
     }
+    #endregion
 
     public GameObject winloseWindow;
     public List<Image> buyTowerImages;
@@ -27,7 +36,9 @@ public class UIController : MonoBehaviour {
     public GameObject statisticsContent;
     public GameObject statisticsFieldPrefab;
 
-    private List<StatisticsField> statisticsFields = new List<StatisticsField>();
+    private List<StatisticsField> _statisticsFields = new List<StatisticsField>();
+    private List<StatisticsFieldInfo> _statisticsFieldInfos = new List<StatisticsFieldInfo>();
+
     private struct StatisticsField
     {
         public GameObject gameObject;
@@ -42,7 +53,6 @@ public class UIController : MonoBehaviour {
         }
     }
 
-    private List<StatisticsFieldInfo> statisticsFieldInfos = new List<StatisticsFieldInfo>();
     private struct StatisticsFieldInfo
     {
         public string fieldName;
@@ -55,34 +65,6 @@ public class UIController : MonoBehaviour {
         }
     }
 
-    private void OnEnable()
-    {
-        GameController.OnCoinsValueChanged += UpdateUICoins;
-        GameController.OnFinishWave += UpdateUIWaves;
-        GameController.OnLifesValueChanged += UpdateUILifes;
-        GameController.OnGameOver += ShowWinLoseWindow;
-        GameController.OnCountUnitsChanged += UpdateUIUnitCount;
-    }
-
-    private void OnDisable()
-    {
-        GameController.OnCoinsValueChanged -= UpdateUICoins;
-        GameController.OnFinishWave -= UpdateUIWaves;
-        GameController.OnLifesValueChanged -= UpdateUILifes;
-        GameController.OnGameOver -= ShowWinLoseWindow;
-        GameController.OnCountUnitsChanged -= UpdateUIUnitCount;
-    }
-
-    private void Awake()
-    {
-        m_Instance = this;
-        FillStatisticsWindow();
-    }
-
-    private void Start()
-    {
-        UpdateTowersUI();
-    }
 
     public void EnableSellTower(BasicTower tower)
     {
@@ -156,8 +138,8 @@ public class UIController : MonoBehaviour {
             newFieldName.text = fieldName;
             newFieldValue.text = value;
 
-            statisticsFields.Add(new StatisticsField(newField, newFieldName, newFieldValue));
-            statisticsFieldInfos.Add(new StatisticsFieldInfo(fieldName, value));
+            _statisticsFields.Add(new StatisticsField(newField, newFieldName, newFieldValue));
+            _statisticsFieldInfos.Add(new StatisticsFieldInfo(fieldName, value));
         }
     }
 
@@ -170,13 +152,46 @@ public class UIController : MonoBehaviour {
             string fieldName = field.Name + ":";
             string value = field.GetValue(Statistics.Instance).ToString();
 
-            int indexField = statisticsFieldInfos.FindIndex(x => x.fieldName == fieldName);
+            int indexField = _statisticsFieldInfos.FindIndex(x => x.fieldName == fieldName);
 
             if (indexField < 0)
                 Debug.Log("Что-то пошло не так");
 
-            statisticsFields[indexField].valueText.text = value;
+            _statisticsFields[indexField].valueText.text = value;
         }
 
     }
+
+
+    private void OnEnable()
+    {
+        GameController.OnCoinsValueChanged += UpdateUICoins;
+        GameController.OnFinishWave += UpdateUIWaves;
+        GameController.OnLifesValueChanged += UpdateUILifes;
+        GameController.OnGameOver += ShowWinLoseWindow;
+        GameController.OnCountUnitsChanged += UpdateUIUnitCount;
+    }
+
+    private void OnDisable()
+    {
+        GameController.OnCoinsValueChanged -= UpdateUICoins;
+        GameController.OnFinishWave -= UpdateUIWaves;
+        GameController.OnLifesValueChanged -= UpdateUILifes;
+        GameController.OnGameOver -= ShowWinLoseWindow;
+        GameController.OnCountUnitsChanged -= UpdateUIUnitCount;
+    }
+
+
+    private void Awake()
+    {
+        m_Instance = this;
+        FillStatisticsWindow();
+    }
+
+    private void Start()
+    {
+        UpdateTowersUI();
+    }
+
+
 }

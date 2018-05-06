@@ -21,12 +21,6 @@ public class Effect : ScriptableObject
         Selection.activeObject = asset;
     }
 #endif
-    public enum EffectType
-    {
-        Poison,
-        Slow,
-        Stun
-    }
 
     public EffectType effectType;
     public bool isRepeatable;
@@ -37,26 +31,33 @@ public class Effect : ScriptableObject
     public int strength;
 
     [SerializeField]
-    protected float duration;
+    protected float _duration;
     [SerializeField]
-    protected float value;
+    protected float _value;
     [SerializeField]
-    protected float interval;
+    protected float _interval;
 
-    private bool isReadyToCast = false;
-    private bool isEnded = false;
-    private float castTime = 0;
-
-    public float Duration
-    {
-        get { return duration; }
-        set { duration = value; }
-    }
+    private bool _isReadyToCast = false;
+    private bool _isEnded = false;
+    private float _castTime = 0;
 
     public Effect(float time, EffectType type)
     {
-        duration = time;
+        _duration = time;
         effectType = type;
+    }
+
+    public enum EffectType
+    {
+        Poison,
+        Slow,
+        Stun
+    }
+
+    public float Duration
+    {
+        get { return _duration; }
+        set { _duration = value; }
     }
 
     /// <summary>
@@ -69,29 +70,29 @@ public class Effect : ScriptableObject
 
     public void UpdateCycle()
     {
-        if (isEnded)
+        if (_isEnded)
             return;
 
         if (isRepeatable)
         {
-            castTime += Time.deltaTime;
+            _castTime += Time.deltaTime;
 
-            if (castTime > interval)
+            if (_castTime > _interval)
             {
-                isReadyToCast = true;
-                castTime -= interval;
+                _isReadyToCast = true;
+                _castTime -= _interval;
             }
         }
 
         if (isSpeedEffect)
         {
-            isReadyToCast = true;
+            _isReadyToCast = true;
         }
 
-        duration -= Time.deltaTime;
-        if (duration <= 0)
+        _duration -= Time.deltaTime;
+        if (_duration <= 0)
         {
-            duration = 0;
+            _duration = 0;
             EndEffect();
         }
 
@@ -99,17 +100,17 @@ public class Effect : ScriptableObject
 
     public virtual void ApplyEffect(Unit bot)
     {
-        if (!isReadyToCast)
+        if (!_isReadyToCast)
             return;
 
         switch (effectType)
         {
             case EffectType.Poison:
-                bot.TrueDamage(value);
-                isReadyToCast = false;
+                bot.TrueDamage(_value);
+                _isReadyToCast = false;
                 break;
             case EffectType.Slow:
-                bot.SpeedMultiplier -= value / 100;
+                bot.SpeedMultiplier -= _value / 100;
                 break;
             case EffectType.Stun:
                 bot.SpeedMultiplier = 0;
@@ -120,6 +121,6 @@ public class Effect : ScriptableObject
 
     public virtual void EndEffect()
     {
-        isEnded = true;
+        _isEnded = true;
     }
 }

@@ -4,16 +4,20 @@ using UnityEngine;
 
 public class Statistics : MonoBehaviour
 {
-
-    protected static Statistics m_Instance = null;
+    #region Singleton
+    protected static Statistics m_Instance;
     public static Statistics Instance
     {
         get
         {
+            if (m_Instance == null)
+            {
+                m_Instance = FindObjectOfType<Statistics>() ?? new Statistics();
+            }
             return m_Instance;
         }
     }
-
+    #endregion
 
     public static int towersDamageDealtTotal;
     public static int lifesLostTotal;
